@@ -145,5 +145,33 @@ shinyServer(function(input, output, session) {
         return(ggplotly(barchart, height = 530) %>% 
                    layout(legend = list(orientation = 'h')))
     })
+​
+	output$annomate <- renderImage({
+    dff <- df_table()
+    dff <- dff %>% filter(state == 'Florida') %>% select(date, county, cases, deaths) %>% mutate(date=ymd(date))
+    # recent case by county
+    county_recent <- dff %>% group_by(county, date) %>%
+      summarise(Confirmed = sum(cases),
+                Deaths = sum(deaths)) %>%
+      mutate('New Case' = Confirmed - lag(Confirmed, 1)) %>%
+      filter(date == max(date))
+    # aggregate in date level
+    ts_all_date_county <- dff %>%
+      rename(County = county) %>%
+      group_by(date) %>%
+      summarise(Cases = sum(cases),
+                Deaths = sum(deaths)) %>%
+      mutate('New Case' = Cases - lag(Cases, 1))
+    ts_recent_county <- ts_all_date_county %>%
+      filter(date == max(date))
+    ts_increment_long_county <- ts_all_date_county %>%
+      select(-`New Case`) %>%
+      mutate(Cases = Cases - lag(Cases,1),
+             Deaths = Deaths - lag(Deaths,1)) %>%
+      filter(date != min(date)) %>%
+      pivot_longer(-date, names_to = "Case", values_to = "Increment")
+    # TS for florida
+​
+	})
     
-})
+ })
