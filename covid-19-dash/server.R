@@ -54,6 +54,37 @@ shinyServer(function(input, output, session) {
         filePath ='https://raw.githubusercontent.com/datasets/population/master/data/population.csv',
         readFunc = read_csv)
     
+    output$mydata <- renderDT({
+      df <- df_table()
+      df <- df %>% filter(state == 'Florida') %>% select(date, county,cases, deaths) %>% mutate(date=ymd(date))
+      df <- df %>% filter(date == max(date)) %>% arrange(desc(cases))
+      return(df)
+    })
+    tolisten <- reactive({
+      list(input$day, input$County)
+    })
+    
+    output$vbox <- renderValueBox({
+      df_box <- df_table() %>% filter(state == 'Florida') %>% select(date, county,cases, deaths) %>% mutate(date=ymd(date))
+      
+      tot.cases <- df_box %>% filter(date == max(date))%>% select(cases) %>% summarise(Cases = sum(cases))    #%>% filter(county %in% req(input$County1212))
+      valueBox(
+        subtitle = tags$p("# of Covid-19 Cases in Florida", style = "font-size: 175%"),
+        value = tags$p(paste(prettyNum(tot.cases, big.mark = ",", scientific = F)), style = "font-size: 100%"),
+        icon = icon("n"))
+      
+    })
+    
+    output$vbox2 <- renderValueBox({
+      df_box <- df_table() %>% filter(state == 'Florida') %>% select(date, county,cases, deaths) %>% mutate(date=ymd(date))
+      
+      tot.deaths<- df_box %>% filter(date == max(date))%>% select(deaths) %>% summarise(Cases = sum(deaths))
+      #%>% filter(county %in% req(input$County1212))
+      valueBox(
+        subtitle = tags$p("# of Covid-19 Deaths in Florida", style = "font-size: 175%"),
+        value = tags$p(paste(prettyNum(tot.deaths, big.mark = ",", scientific = F)), style = "font-size: 100%"),
+        icon = icon("health"))
+    })
     
     output$world_plot <- renderPlotly({
         dta <- df_world()
@@ -102,6 +133,7 @@ shinyServer(function(input, output, session) {
                 scale_fill_gradientn(colours = hcl.colors(2,palette = "Emrld", rev = T, fixup = T))
             ggplotly(p1,tooltip = c("text"))
         }
+        
     })
     output$bar <- renderPlotly({
         dfff <- df_table()
@@ -145,7 +177,7 @@ shinyServer(function(input, output, session) {
         return(ggplotly(barchart, height = 530) %>% 
                    layout(legend = list(orientation = 'h')))
     })
-​
+
 	output$annomate <- renderImage({
     dff <- df_table()
     dff <- dff %>% filter(state == 'Florida') %>% select(date, county, cases, deaths) %>% mutate(date=ymd(date))
@@ -171,7 +203,7 @@ shinyServer(function(input, output, session) {
       filter(date != min(date)) %>%
       pivot_longer(-date, names_to = "Case", values_to = "Increment")
     # TS for florida
-​
+
 	})
     
  })
