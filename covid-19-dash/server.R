@@ -103,6 +103,47 @@ shinyServer(function(input, output, session) {
             ggplotly(p1,tooltip = c("text"))
         }
     })
+    output$bar <- renderPlotly({
+        dfff <- df_table()
+        #print(input$County1212)
+        dta <- dfff %>% filter(state == 'Florida') %>% select(date, county, cases, deaths)  %>% mutate(date=ymd(date))
+        dta <- dta %>% filter(county %in% req(input$County1212))
+        #print(head(dta))
+        # recent case by county
+        county_recent <- dta %>% group_by(county, date) %>%
+            summarise(Confirmed = sum(cases),
+                      Deaths = sum(deaths)) %>%
+            mutate('New Case' = Confirmed - lag(Confirmed, 1)) %>%
+            filter(date == max(date))
+        # aggregate in date level
+        ts_all_date_county <- dta %>%
+            rename(County = county) %>%
+            group_by(date) %>%
+            summarise(Cases = sum(cases),
+                      Deaths = sum(deaths)) %>%
+            mutate('New Case' = Cases - lag(Cases, 1))
+        ts_recent_county <- ts_all_date_county %>%
+            filter(date == max(date))
+        # cumulative deaths in all florida counties
+        ts_date_long_county <- ts_all_date_county %>% 
+            select(-c(Cases, `New Case`)) %>%
+            pivot_longer(cols = -date, names_to = "Status", values_to = "Cases")
+        # creating barchart of cases and deaths in all florida counties
+        barchart <- ggplot(data = ts_all_date_county, aes(x = date)) +
+            geom_bar(aes(y = Cases), position = "dodge", stat = "identity", fill = "#d47274") +
+            geom_bar(data = ts_date_long_county, aes(y = Cases, fill = Status), position = "dodge", stat = "identity") +
+            scale_fill_manual(values = c("#000000", "#d47274")) +
+            scale_y_continuous(labels = scales::label_number_si(accuracy = 0.1)) +
+            #theme_solarized(base_size = 10, light = TRUE)+
+            theme(plot.margin = margin(0, 0, 0, 0, "pt"),
+                  panel.background = element_rect(fill = "White"),
+                  legend.position = "bottom",
+                  axis.title = element_blank(),
+                  #axis.text.y = element_blank(),
+                  axis.ticks = element_blank()) +
+            ggtitle("US County COVID-19 Cumulative Cases by Day")
+        return(ggplotly(barchart, height = 530) %>% 
+                   layout(legend = list(orientation = 'h')))
+    })
     
-    
- })
+})
