@@ -134,6 +134,41 @@ shinyServer(function(input, output, session) {
       ggplotly(p1,tooltip = c("text"))
     }
   })
+  
+  output$myplot <- renderPlot({
+    data <- data.frame(df())
+    covid <- data %>%
+      filter(Province_State == "Florida") %>% 
+      select(county = Admin2, Lat, Long_, contains("X")) %>% 
+      filter(county != "Unassigned" & county != "Out of FL")
+    all.counties <- map_data("county")
+    florida <- all.counties %>%
+      filter(region=="florida")
+    covid$county <- tolower(covid$county)
+    covid[55,1] <- "st johns"
+    covid[56, 1] <- "st lucie"
+    covid[13, 1] <- "de soto"
+    florida.covid <- left_join(florida, covid, by = c("subregion"="county"))
+    florida.covid <- florida.covid %>% 
+      select(-Lat, -Long_, -region, County = subregion) 
+    data <- florida.covid
+    #print(head(data))
+    Total <- data[,(47 + as.numeric(input$day))]
+    data$Total <- Total
+    data1 <- data %>%
+      select(County, Total, lat, long, group) 
+    corona <- data1
+    # create the base plot of the state with counties
+    # # this code comes from the R Handout on our Canvas Page
+    base.plot <- ggplot(corona, aes(x=long, y=lat, group=group)) +
+      geom_polygon(aes(fill=log(Total)),color="black", size=0.1) +
+      theme_void() +
+      theme(legend.position = "none") +
+      scale_fill_gradient(low = "white",
+                          high = "#72a4d4")
+    return(base.plot)
+  })
+  
   output$bar <- renderPlotly({
     dfff <- df_table()
     #print(input$County1212)
