@@ -9,7 +9,7 @@ library(data.table)
 library(readr)
 
 filePath = "https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv"
-dff10 <- read_csv(filePath) %>% filter(state == "Florida")
+dff10 <- read_csv(filePath) %>% filter(state == "Florida") %>% arrange(county)
 dashboardPage(
   dashboardHeader(title = "FL Covid-19"),
   dashboardSidebar(
