@@ -93,11 +93,18 @@ shinyServer(function(input, output, session) {
             country.pop <- filter(country.pop, Year == '2018')
             print(head(country.pop))
             names(country.pop)[1] <- "Country.Name"
-            country.pop <- country.pop %>% mutate(Country.Name = fct_recode(Country.Name, 'USA' = 'United States',"Ivory Coast" = "Cote d'Ivoire", "Egypt" = "Egypt, Arab Rep.", "Iran" = "Iran, Islamic Rep.","Russia" = "Russian Federation", "Venezuela" = "Venezuela, RB", "Democratic Republic of the Congo" = "Congo, Dem. Rep.", "Republic of Congo" = "Congo, Rep.", "Czechia" = "Czech Republic", "Slovakia" = "Slovak Republic", "Yemen" = "Yemen, Rep.", "Syria" = "Syrian Arab Republic", "Kyrgyzstan" = "Kyrgyz Republic", "Laos" = "Lao PDR", "Burma" = "Myanmar"))
+            country.pop <- country.pop %>% mutate(Country.Name = fct_recode(Country.Name, 'USA' = 'United States',"Ivory Coast" = "Cote d'Ivoire", "Egypt" = "Egypt, Arab Rep.", "Iran Islamic Rep." = "Iran",
+                                                                            "Russia" = "Russian Federation", "Venezuela" = "Venezuela, RB", 
+                                                                            "Democratic Republic of the Congo" = "Congo, Dem. Rep.", "Republic of Congo" = "Congo, Rep.", 
+                                                                            "Slovakia" = "Slovak Republic", 
+                                                                            "Yemen" = "Yemen, Rep.", "Syria" = "Syrian Arab Republic", 
+                                                                            "Kyrgyzstan" = "Kyrgyz Republic", "Laos" = "Lao PDR",  "UK" = "United Kingdom" ))
             #country.pop$Country.Name
             pop.and.covid <- left_join(covid, country.pop, by = c(Country.Region = "Country.Name"))
             names(pop.and.covid)[5] <- "Population"
-            pop.and.covid <- pop.and.covid %>% mutate(Country.Region = fct_recode(Country.Region, "Democratic Republic of the Congo" = "Congo (Kinshasa)",'Republic of Congo' = 'Congo, Rep.',"USA" = "US", "Ivory Coast" = "Cote d'Ivoire", 'Republic of Congo' = 'Congo (Brazzaville)', "Myanmar" = "Burma", "Czech Republic" = "Czechia", "Slovakia" = "Slovakia", "Macedonia" = "North Macedonia", "UK" = "United Kingdom"))
+            pop.and.covid <- pop.and.covid %>% mutate(Country.Region = fct_recode(Country.Region, "Democratic Republic of the Congo" = "Congo (Kinshasa)",'Republic of Congo' = 'Congo, Rep.',"USA" = "US", "Ivory Coast" = "Cote d'Ivoire", 
+                                                                                  'Republic of Congo' = 'Congo (Brazzaville)', "Myanmar" = "Burma", 
+                                                                                  "North Macedonia" = "Macedonia","Czech Republic" = "Czechia" ))
             pop.world <- left_join(pop.and.covid, worlddata, by = c(Country.Region = "region"))
             pop.world <- transform(pop.world, sumpop = (sum /Population)*1000000)
             #print(head(pop.world))
@@ -109,7 +116,7 @@ shinyServer(function(input, output, session) {
                 scale_fill_gradientn(colours = hcl.colors(7,palette = "Emrld", rev = T, fixup = T)) + theme(legend.position = "none")
             ggplotly(p1,tooltip = c("text"))
         }
-    })
+        })
     
     
     output$mydata <- renderDT({
@@ -257,7 +264,7 @@ shinyServer(function(input, output, session) {
                   axis.title = element_blank(),
                   #axis.text.y = element_blank(),
                   axis.ticks = element_blank()) +
-            ggtitle("US County COVID-19 Cumulative Cases by Day")
+            ggtitle("Florida County COVID-19 Cumulative Cases by Day")
         return(ggplotly(barchart, height = 530) %>% 
                    layout(legend = list(orientation = 'h')))
     })
